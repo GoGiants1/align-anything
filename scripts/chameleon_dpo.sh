@@ -17,24 +17,30 @@
 
 MODEL_NAME_OR_PATH="PKU-Alignment/AA-chameleon-7b-base" # model path
 
-TRAIN_DATASETS="" # dataset path
-TRAIN_DATA_FILES="" # dataset name
-
+TRAIN_DATASETS="/data/dataset" # dataset path
+PT_NAME="aa-ti2ti-pretokenize-output.pt"
 OUTPUT_DIR="../outputs/chameleon_dpo" # output dir
 
 # For wandb online logging
-export WANDB_API_KEY=""
+export WANDB_API_KEY=${WANDB_API_KEY}
 
 # Source the setup script
 source ./setup.sh
 
 # Execute deepspeed command
 deepspeed \
-     --master_port ${MASTER_PORT} \
-     --module align_anything.trainers.text_image_to_text_image.dpo \
-     --model_name_or_path ${MODEL_NAME_OR_PATH} \
-     --train_datasets ${TRAIN_DATASETS} \
-     --train_data_files ${TRAIN_DATA_FILES} \
-     --output_dir ${OUTPUT_DIR} \
-     --save_interval 1000 \
-     --epochs 2
+    --master_port ${MASTER_PORT} \
+    --module align_anything.trainers.text_image_to_text_image.dpo \
+    --model_name_or_path ${MODEL_NAME_OR_PATH} \
+    --train_datasets ${TRAIN_DATASETS} \
+    --train_data_files ${PT_NAME} \
+    --output_dir ${OUTPUT_DIR} \
+    --train_template ANYTHING_TI2TI \
+    --train_split 'train' \
+    --per_device_train_batch_size 2 \
+    --per_device_eval_batch_size 2 \
+    --gradient_accumulation_steps 2 \
+    --save_interval 2500 \
+    --learning_rate 5e-7 \
+    --epochs 3 \
+    --lr_scheduler_type cosine
