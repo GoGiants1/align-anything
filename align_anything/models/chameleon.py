@@ -23,32 +23,41 @@ from torch.nn import CrossEntropyLoss
 from transformers import AutoConfig
 from transformers.cache_utils import Cache
 from transformers.modeling_outputs import CausalLMOutputWithPast
-from transformers.models.chameleon.modeling_chameleon import ChameleonForConditionalGeneration
+from transformers.models.chameleon.modeling_chameleon import (
+    ChameleonForConditionalGeneration,
+)
 
 from align_anything.models.reward_model import ScoreModelOutput
 
 
 class AccustomedChameleonModel(ChameleonForConditionalGeneration):
-
     def pre_tokenization(
         self,
         input_ids: torch.LongTensor = None,
         pixel_values: torch.FloatTensor = None,
     ):
         if pixel_values is None:
-
             return_dict = {
-                'input_ids': input_ids,
+                "input_ids": input_ids,
             }
             return return_dict
         image_tokens = self.model.get_image_tokens(pixel_values)
+        n_image_tokens_in_text = (input_ids == self.vocabulary_mapping.image_token_id).sum().item()
+        n_image_features = image_tokens.shape[0] * image_tokens.shape[1]
+        if n_image_tokens_in_text != n_image_features:
+            raise ValueError(
+                f"Image features and image tokens do not match: tokens: {n_image_tokens_in_text}, features {n_image_features}"
+            )
         special_image_mask = input_ids == self.model.vocabulary_mapping.image_token_id
         image_tokens = image_tokens.to(input_ids.device, input_ids.dtype)
+        print(f"input_ids: {input_ids.size()}")
+        print(f"image_tokens: {image_tokens.size()}")
+        print(f"spectial_image_mask: {special_image_mask.size()}")
         input_ids = input_ids.masked_scatter(special_image_mask, image_tokens)
 
         return_dict = {
-            'input_ids': input_ids.to('cpu'),
-            'pixel_values': pixel_values.to('cpu'),
+            "input_ids": input_ids.to("cpu"),
+            "pixel_values": pixel_values.to("cpu"),
         }
 
         return return_dict
@@ -61,11 +70,11 @@ class AccustomedChameleonModel(ChameleonForConditionalGeneration):
         self, messages: list[dict[str, Any]], add_generation_prompt: bool = False
     ) -> dict[str, Any]:
         # use default format
-        final_text = ''
+        final_text = ""
         for line in messages:
-            for content in line['content']:
-                if content['type'] == 'text':
-                    final_text += content['text']
+            for content in line["content"]:
+                if content["type"] == "text":
+                    final_text += content["text"]
         return final_text
 
     def forward(
@@ -174,7 +183,6 @@ class AccustomedChameleonModel(ChameleonForConditionalGeneration):
 
 
 class AccustomedChameleonRewardModel(ChameleonForConditionalGeneration):
-
     supports_gradient_checkpointing = True
 
     def __init__(self, config: AutoConfig):
@@ -184,8 +192,8 @@ class AccustomedChameleonRewardModel(ChameleonForConditionalGeneration):
 
     def infer_batch(self, batch: dict[str, torch.Tensor]) -> dict[str, torch.Tensor]:
         return {
-            'input_ids': batch['input_ids'],
-            'attention_mask': batch['attention_mask'],
+            "input_ids": batch["input_ids"],
+            "attention_mask": batch["attention_mask"],
         }
 
     def forward(
