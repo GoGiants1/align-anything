@@ -21,13 +21,14 @@ REWARD_MODEL_NAME_OR_PATH="../outputs/chameleon_rm" # model path
 CRITIC_MODEL_NAME_OR_PATH="../outputs/chameleon_rm" # model path
 
 TRAIN_DATASETS="/data/dataset/align-anything-ti2ti" # dataset path
-TRAIN_DATA_FILES="train_27k.json" # dataset name
+TRAIN_PT_NAME=""
 
 PTX_DATASETS="" # dataset path
-PTX_DATA_FILES="" # dataset name
+PTX_PT_NAME=""
 
-OUTPUT_DIR="../outputs/chameleon_ppo" # output dir
+OUTPUT_DIR="../outputs/ppo_text_image_to_text_image"
 
+source ./setup.sh
 # For wandb online logging
 # get api key from environment variable
 
@@ -46,9 +47,11 @@ deepspeed \
      --reward_model_name_or_path ${REWARD_MODEL_NAME_OR_PATH} \
      --reward_critic_model_name_or_path ${CRITIC_MODEL_NAME_OR_PATH} \
      --train_datasets ${TRAIN_DATASETS} \
-     --train_data_files ${TRAIN_DATA_FILES} \
+     --train_template ANYTHING_TI2TI \
+     --train_data_files ${TRAIN_PT_NAME} \
      --ptx_datasets ${PTX_DATASETS} \
-     --ptx_data_files ${PTX_DATA_FILES} \
-     --output_dir ${OUTPUT_DIR} \
-     --save_interval 1000 \
-     --epochs 2
+     --ptx_data_files ${PTX_PT_NAME} \
+     --ptx_template Llava \
+     --output_dir ${OUTPUT_DIR}
+
+
