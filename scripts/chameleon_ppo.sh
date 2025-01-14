@@ -15,12 +15,13 @@
 # limitations under the License.
 # ==============================================================================
 
-ACTOR_MODEL_NAME_OR_PATH="PKU-Alignment/AA-chameleon-7b-base" # model path
+# ACTOR_MODEL_NAME_OR_PATH="PKU-Alignment/AA-chameleon-7b-base" # model path
+ACTOR_MODEL_NAME_OR_PATH="PKU-Alignment/AA-chameleon-7b-plus" # model path
 REWARD_MODEL_NAME_OR_PATH="../outputs/chameleon_rm" # model path
 CRITIC_MODEL_NAME_OR_PATH="../outputs/chameleon_rm" # model path
 
-TRAIN_DATASETS="" # dataset path
-TRAIN_DATA_FILES="" # dataset name
+TRAIN_DATASETS="/data/dataset/align-anything-ti2ti" # dataset path
+TRAIN_DATA_FILES="train_27k.json" # dataset name
 
 PTX_DATASETS="" # dataset path
 PTX_DATA_FILES="" # dataset name
@@ -28,7 +29,11 @@ PTX_DATA_FILES="" # dataset name
 OUTPUT_DIR="../outputs/chameleon_ppo" # output dir
 
 # For wandb online logging
-export WANDB_API_KEY=""
+# get api key from environment variable
+
+
+
+export WANDB_API_KEY=${WANDB_API_KEY}
 
 # Source the setup script
 source ./setup.sh

@@ -14,7 +14,6 @@
 # ==============================================================================
 """Trainer for PPO training."""
 
-
 import argparse
 import copy
 import os
@@ -59,15 +58,15 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
 
     def init_models(self) -> None:
         """Initialize model and tokenizer."""
-        if self.ds_train_cfgs['zero_optimization']['stage'] == 3:
+        if self.ds_train_cfgs["zero_optimization"]["stage"] == 3:
             self.dstchf_train = HfDeepSpeedConfig(self.ds_train_cfgs)
-        if self.ds_eval_cfgs['zero_optimization']['stage'] == 3:
+        if self.ds_eval_cfgs["zero_optimization"]["stage"] == 3:
             self.dsechf_eval = HfDeepSpeedConfig(self.ds_eval_cfgs)
         # loading actor model
         self.actor_model, self.tokenizer, self.processor = load_pretrained_models(
             self.cfgs.model_cfgs.actor_model_name_or_path,
             model_max_length=self.cfgs.model_cfgs.model_max_length,
-            padding_side='left',
+            padding_side="left",
             trust_remote_code=self.cfgs.model_cfgs.trust_remote_code,
             freeze_mm_proj=self.cfgs.train_cfgs.freeze_mm_proj,
             freeze_vision_tower=self.cfgs.train_cfgs.freeze_vision_tower,
@@ -79,7 +78,7 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
         self.actor_reference_model, _, _ = load_pretrained_models(
             self.cfgs.model_cfgs.actor_model_name_or_path,
             model_max_length=self.cfgs.model_cfgs.model_max_length,
-            padding_side='left',
+            padding_side="left",
             trust_remote_code=self.cfgs.model_cfgs.trust_remote_code,
             processor_kwargs=self.cfgs.train_cfgs.processor_kwargs,
         )
@@ -87,7 +86,7 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
         self.reward_model, self.reward_tokenizer, _ = load_pretrained_model_with_value_head(
             self.cfgs.model_cfgs.reward_model_name_or_path,
             model_max_length=self.cfgs.model_cfgs.model_max_length,
-            padding_side='right',
+            padding_side="right",
             trust_remote_code=self.cfgs.model_cfgs.trust_remote_code,
         )
         # loading reward critic model
@@ -95,7 +94,7 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
             load_pretrained_model_with_value_head(
                 self.cfgs.model_cfgs.reward_critic_model_name_or_path,
                 model_max_length=self.cfgs.model_cfgs.model_max_length,
-                padding_side='left',
+                padding_side="left",
                 trust_remote_code=self.cfgs.model_cfgs.trust_remote_code,
             )
         )
@@ -105,10 +104,10 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
         if not is_same_tokenizer(self.tokenizer, self.reward_critic_tokenizer):
             raise ValueError(
                 (
-                    'Reward critic tokenizer must be the same as actor tokenizer. '
-                    'Expected {0.__module__}.{0.__qualname__}(vocab_size={1}), '
-                    'but got {2.__module__}.{2.__qualname__}(vocab_size={3}). '
-                    'Please consider pass `--reward_critic_model_name_or_path` from the command line.'
+                    "Reward critic tokenizer must be the same as actor tokenizer. "
+                    "Expected {0.__module__}.{0.__qualname__}(vocab_size={1}), "
+                    "but got {2.__module__}.{2.__qualname__}(vocab_size={3}). "
+                    "Please consider pass `--reward_critic_model_name_or_path` from the command line."
                 ).format(
                     type(self.tokenizer),
                     len(self.tokenizer),
@@ -139,11 +138,11 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
             synced_gpus=True,
             do_sample=True,
             past_key_value=None,
-            multimodal_generation_mode='interleaved-text-image',
+            multimodal_generation_mode="interleaved-text-image",
         )
         attention_mask = sequences.not_equal(self.tokenizer.pad_token_id)
-        actor_batch['input_ids'] = sequences
-        actor_batch['attention_mask'] = attention_mask
+        actor_batch["input_ids"] = sequences
+        actor_batch["attention_mask"] = attention_mask
 
         return actor_batch
 
@@ -154,7 +153,7 @@ class PPOTrainer(PPOTextTrainer):  # pylint: disable=too-many-instance-attribute
         """Split a batch of PTX samples into micro-batches."""
         torch.set_printoptions(threshold=torch.inf)
         micro_batches = []
-        total_batch_size = ptx_batch['input_ids'].size(0)
+        total_batch_size = ptx_batch["input_ids"].size(0)
         micro_batch_size = int(self.cfgs.train_cfgs.per_device_train_batch_size)
         for i in range(0, total_batch_size, micro_batch_size):
             micro_batch = {
@@ -173,8 +172,8 @@ def main():
     torch.cuda.set_device(current_device)
 
     # read default configs from the yaml file
-    task = os.path.join('text_image_to_text_image', 'ppo')
-    dict_cfgs, ds_cfgs = read_cfgs(mode='train', task=task)
+    task = os.path.join("text_image_to_text_image", "ppo")
+    dict_cfgs, ds_cfgs = read_cfgs(mode="train", task=task)
 
     # get custom configs from command line
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -195,5 +194,5 @@ def main():
     trainer.save()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
