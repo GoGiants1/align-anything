@@ -37,9 +37,9 @@ deepspeed \
     --output_dir ${OUTPUT_DIR} \
     --train_template ANYTHING_TI2TI \
     --train_split 'train' \
-    --per_device_train_batch_size 2 \
-    --per_device_eval_batch_size 2 \
-    --gradient_accumulation_steps 8 \
+    --per_device_train_batch_size 1 \
+    --per_device_eval_batch_size 1 \
+    --gradient_accumulation_steps 1 \
     --save_interval 2500 \
     --learning_rate 5e-7 \
     --epochs 3 \
